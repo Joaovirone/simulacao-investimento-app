@@ -9,3 +9,9 @@ git checkout -b 01-mudando-alguma-coisa
 git checkout -b 02-mudando-coisa-alguma
 
 por aí vai, seguindo ordem numérica e nome da branch especificando o que está editando/codando
+
+depois de criar essa branch usando git checkout (tu cria a branch localmente mas temos que mandar pra o repositório remoto)
+
+lembrar de usar
+
+git push -u origin nome-da-branch para jogoar a branch no repositório remoto
