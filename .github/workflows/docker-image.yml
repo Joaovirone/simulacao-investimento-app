@@ -3,7 +3,6 @@ name: CI/CD - Invest-Simulator
 on:
   push:
     branches: [ "master" ]
-    # Rodar também quando criarmos uma tag de versão (ex: v1.0.0) no GitHub
     tags: [ 'v*.*.*' ]
   pull_request:
     branches: [ "master" ]
