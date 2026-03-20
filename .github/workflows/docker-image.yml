@@ -6,21 +6,18 @@ on:
     tags: [ 'v*.*.*' ]
   pull_request:
     branches: [ "master" ]
-    
-env:
 
+env:
   IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/Invest-Simulador
 
 jobs:
   build-and-push:
     name: build e push da imagem
     runs-on: ubuntu-24.04
-
     steps:
-      - name: checkou do código
+      - name: checkout do código
         uses: actions/checkout@v4
 
-   
       - name: Setup do docker buildx
         uses: docker/setup-buildx-action@v3
 
@@ -35,5 +32,25 @@ jobs:
         with:
           context: . 
           push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ env.IMAGE_NAME }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  deploy-to-oci:
+    name: Deploy na OCI
+    needs: build-and-push 
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Executar Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.OCI_INSTANCE_IP }}
+          username: ubuntu 
+          key: ${{ secrets.OCI_SSH_PRIVATE_KEY }}
+          script: |
+            cd ~/invest-simulator
+            echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+            docker compose pull
+            docker compose up -d
+            docker image prune -f
