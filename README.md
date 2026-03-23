@@ -15,3 +15,5 @@ depois de criar essa branch usando git checkout (tu cria a branch localmente mas
 lembrar de usar
 
 git push -u origin nome-da-branch para jogoar a branch no repositório remoto
+
+para iniciar o servidor do backend é só utilizar comnando no diretório /backend - npm run dev
