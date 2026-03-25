@@ -1,5 +1,5 @@
 import axios from 'axios';
 
 export const api = axios.create({
-  baseURL: 'http://localhost:3333', 
+  baseURL: typeof window !== 'undefined' ? 'http://localhost:3333': 'http://backend:3333' 
 });
