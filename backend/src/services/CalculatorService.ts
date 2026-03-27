@@ -1,8 +1,21 @@
-export class CalculatorService {
+// src/services/CalculatorService.ts
 
-    static simulate(initialValue: number, monthlyContribution: number, annualRatePercent: number, termMonths: number){
-    
-    // formula: (1 + taxa_anual)^(1/12) - 1
+// 1. Criamos um "DTO" para tipar exatamente o que o serviço precisa receber
+export interface SimulationDTO {
+  initialValue: number;
+  monthlyContribution: number;
+  annualRatePercent: number;
+  termMonths: number;
+}
+
+export class CalculatorService {
+  
+  // 2. Método utilitário privado para evitar repetição de código (DRY - Don't Repeat Yourself)
+  private static round(value: number): number {
+    return parseFloat(value.toFixed(2));
+  }
+
+  static simulate({ initialValue, monthlyContribution, annualRatePercent, termMonths }: SimulationDTO) {
     const monthlyRate = Math.pow(1 + (annualRatePercent / 100), 1 / 12) - 1;
 
     let currentTotal = initialValue;
@@ -10,39 +23,32 @@ export class CalculatorService {
     const projectionHistory = [];
 
     projectionHistory.push({
-        month: 0,
-        invested: totalInvested,
-        balance: currentTotal
+      month: 0,
+      invested: this.round(totalInvested),
+      balance: this.round(currentTotal)
     });
 
-    for (let month = 1; month <= termMonths; month ++){
-        currentTotal += currentTotal * monthlyRate;
-
-
-        // add o aporte do mes
-        currentTotal += monthlyContribution;
-        totalInvested += monthlyContribution;
-        
-        projectionHistory.push({
-            month,
-            invested: parseFloat(totalInvested.toFixed(2)),
-            balance: parseFloat(currentTotal.toFixed(2))
-        });
-
+    for (let month = 1; month <= termMonths; month++) {
+      currentTotal += currentTotal * monthlyRate;
+      currentTotal += monthlyContribution;
+      totalInvested += monthlyContribution;
+      
+      projectionHistory.push({
+        month,
+        invested: this.round(totalInvested),
+        balance: this.round(currentTotal)
+      });
     }
 
-    const estimatedReturn = parseFloat(currentTotal.toFixed(2));
-    const totalInvestedRounded = parseFloat(totalInvested.toFixed(2));
-    const estimatedProfit = parseFloat((estimatedReturn - totalInvestedRounded).toFixed(2));
+    const estimatedReturn = this.round(currentTotal);
+    const totalInvestedRounded = this.round(totalInvested);
+    const estimatedProfit = this.round(estimatedReturn - totalInvestedRounded);
 
     return {
-        totalInvested: totalInvestedRounded,
-        estimatedReturn,
-        estimatedProfit,
-        projectionHistory
+      totalInvested: totalInvestedRounded,
+      estimatedReturn,
+      estimatedProfit,
+      projectionHistory
     };
-
-    }
-
-
+  }
 }
