@@ -1,65 +1,105 @@
-import Image from "next/image";
+// src/app/page.tsx
+"use client";
 
-export default function Home() {
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { api } from '@/services/api';
+import { toast } from 'sonner';
+import { LineChart, Lock, Mail } from 'lucide-react';
+
+export default function Login() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      // 1. Chama a rota de login do backend
+      const response = await api.post('/login', { email, password });
+      
+      const { token, user } = response.data;
+
+      // 2. Salva o Token e os dados do usuário no LocalStorage do navegador
+      localStorage.setItem('@InvestSim:token', token);
+      localStorage.setItem('@InvestSim:user', JSON.stringify(user));
+
+      toast.success('Login realizado com sucesso!', {
+        description: `Bem-vindo de volta, ${user.name}!`,
+      });
+
+      // 3. Redireciona para o Dashboard
+      router.push('/dashboard');
+
+    } catch (error: any) {
+      console.error(error);
+      toast.error('Erro ao acessar', {
+        description: error.response?.data?.error || 'Verifique suas credenciais.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4 font-sans text-slate-800">
+      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+        
+        <div className="flex flex-col items-center mb-8">
+          <div className="bg-blue-600 p-3 rounded-xl mb-4 shadow-md">
+            <LineChart className="text-white w-8 h-8" />
+          </div>
+          <h1 className="text-2xl font-bold text-slate-900">InvestSim</h1>
+          <p className="text-slate-500 text-sm mt-1">Acesse sua conta para simular</p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+        <form onSubmit={handleLogin} className="space-y-5">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700">E-mail</label>
+            <div className="relative">
+              <Mail className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input 
+                type="email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="seu@email.com" 
+                className="w-full border border-slate-300 rounded-lg py-2.5 pl-10 pr-3 text-sm focus:ring-2 focus:ring-blue-600 outline-none transition"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700">Senha</label>
+            <div className="relative">
+              <Lock className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input 
+                type="password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••" 
+                className="w-full border border-slate-300 rounded-lg py-2.5 pl-10 pr-3 text-sm focus:ring-2 focus:ring-blue-600 outline-none transition"
+                required
+              />
+            </div>
+          </div>
+
+          <button 
+            type="submit" 
+            disabled={isLoading}
+            className="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 mt-4"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            {isLoading ? 'Entrando...' : 'Entrar'}
+          </button>
+        </form>
+
+        <div className="mt-6 text-center text-sm text-slate-500">
+          Ainda não tem conta? <span className="text-blue-600 font-medium cursor-pointer hover:underline">Crie uma agora</span>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
