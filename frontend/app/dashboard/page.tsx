@@ -1,190 +1,184 @@
-"use client"; // Obrigatório no Next.js para usar useState e onClick
+"use client";
 
-import { useState } from 'react';
-import { api } from '@/services/api'; // Ajuste o caminho de importação se necessário
-import { LineChart, DollarSign, TrendingUp, Trash2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { api } from '@/services/api';
+import { toast } from 'sonner';
+import { LineChart, DollarSign, TrendingUp, LogOut, RotateCcw } from 'lucide-react';
+import { SimulationCharts } from './charts';
 
-// 1. O "Contrato" do que vamos receber da API
 interface SimulationResult {
   totalInvested: number;
   estimatedReturn: number;
   estimatedProfit: number;
+  projectionHistory: { month: number; balance: number }[];
 }
 
 export default function Dashboard() {
-  // 2. Estados do Formulário (O que o usuário digita)
-  const [investName, setInvestName] = useState('Meu Investimento');
-  const [investType, setInvestType] = useState('CDB');
+  const router = useRouter();
+  const [userName, setUserName] = useState('');
+  
+  // Estados do Form
+  const [investName, setInvestName] = useState('Reserva de Emergência');
   const [initialValue, setInitialValue] = useState<number | ''>('');
   const [monthlyContribution, setMonthlyContribution] = useState<number | ''>('');
   const [annualRate, setAnnualRate] = useState<number | ''>('');
-  const [rateType, setRateType] = useState('Dinâmico');
   const [termMonths, setTermMonths] = useState<number | ''>('');
 
-  // 3. Estado do Resultado (O que vem do Backend para os KPIs)
+  // Estados de Resultado
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // 4. A Função que faz a mágica acontecer
+  // Verifica Autenticação ao carregar
+  useEffect(() => {
+    const token = localStorage.getItem('@InvestSim:token');
+    const user = localStorage.getItem('@InvestSim:user');
+    
+    if (!token || !user) {
+      router.push('/');
+      return;
+    }
+    setUserName(JSON.parse(user).name);
+  }, [router]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('@InvestSim:token');
+    localStorage.removeItem('@InvestSim:user');
+    router.push('/');
+  };
+
+  const handleReset = () => {
+    setResult(null);
+    toast.info('Dashboard resetado para nova simulação.');
+  };
+
   const handleCalculate = async (e: React.FormEvent) => {
-    e.preventDefault(); // Evita que a página recarregue ao enviar o form
+    e.preventDefault();
     setIsLoading(true);
 
     try {
-      // Chama o nosso backend enviando os dados do estado
       const response = await api.post('/simulations', {
         investName,
-        investType,
+        investType: 'Geral',
         initialValue: Number(initialValue),
         monthlyContribution: Number(monthlyContribution),
         annualRate: Number(annualRate),
-        rateType,
+        rateType: 'Prefixado',
         termMonths: Number(termMonths)
       });
 
-      // Atualiza os cards de KPI com a resposta do backend
       setResult({
         totalInvested: response.data.totalInvested,
         estimatedReturn: response.data.estimatedReturn,
         estimatedProfit: response.data.estimatedProfit,
+        projectionHistory: response.data.projectionHistory,
       });
 
-      alert('Simulação salva com sucesso!');
+      toast.success('Simulação concluída!', { description: 'Gráficos gerados com sucesso.' });
     } catch (error) {
-      console.error(error);
-      alert('Erro ao calcular simulação. Verifique o console.');
+      toast.error('Erro ao calcular', { description: 'Sua sessão pode ter expirado. Tente logar novamente.' });
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Função para formatar dinheiro (R$)
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8 flex justify-center font-sans text-slate-800">
-      <div className="w-full max-w-5xl space-y-6">
+    <div className="min-h-screen bg-slate-50 p-6 md:p-10 font-sans text-slate-800">
+      <div className="max-w-6xl mx-auto space-y-6">
         
-        <header className="flex items-center gap-2 mb-8">
-          <div className="bg-blue-600 p-2 rounded-lg">
-            <LineChart className="text-white w-6 h-6" />
+        {/* CABEÇALHO */}
+        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+          <div className="flex items-center gap-3">
+            <div className="bg-blue-600 p-2.5 rounded-xl shadow-sm">
+              <LineChart className="text-white w-6 h-6" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">InvestSim</h1>
+              <p className="text-sm text-slate-500">Olá, {userName}</p>
+            </div>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">InvestSim</h1>
+          
+          <div className="flex gap-3">
+            <button onClick={handleReset} className="flex items-center gap-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm">
+              <RotateCcw className="w-4 h-4" /> Resetar
+            </button>
+            <button onClick={handleLogout} className="flex items-center gap-2 bg-slate-900 text-white hover:bg-slate-800 px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm">
+              <LogOut className="w-4 h-4" /> Sair
+            </button>
+          </div>
         </header>
 
-        <h2 className="text-xl font-semibold">Meu Dashboard</h2>
-        
-        {/* CARDS DE KPI DINÂMICOS */}
+        {/* KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center">
             <div className="flex justify-between items-center text-slate-500 mb-2">
               <span className="text-sm font-medium">Total Investido</span>
               <DollarSign className="w-4 h-4" />
             </div>
-            <span className="text-2xl font-bold">
-              {result ? formatCurrency(result.totalInvested) : 'R$ 0,00'}
-            </span>
+            <span className="text-3xl font-bold text-slate-800">{result ? formatCurrency(result.totalInvested) : 'R$ 0,00'}</span>
           </div>
 
-          <div className="bg-white p-5 rounded-xl border border-blue-100 shadow-sm">
+          <div className="bg-blue-50 p-6 rounded-xl border border-blue-100 shadow-sm flex flex-col justify-center">
             <div className="flex justify-between items-center text-blue-600 mb-2">
-              <span className="text-sm font-medium">Retorno Estimado</span>
+              <span className="text-sm font-medium">Retorno Bruto Estimado</span>
               <TrendingUp className="w-4 h-4" />
             </div>
-            <span className="text-2xl font-bold text-blue-700">
-              {result ? formatCurrency(result.estimatedReturn) : 'R$ 0,00'}
-            </span>
+            <span className="text-3xl font-bold text-blue-700">{result ? formatCurrency(result.estimatedReturn) : 'R$ 0,00'}</span>
           </div>
 
-          <div className="bg-white p-5 rounded-xl border border-blue-100 shadow-sm">
-            <div className="flex justify-between items-center text-blue-600 mb-2">
-              <span className="text-sm font-medium">Lucro Estimado</span>
+          <div className="bg-green-50 p-6 rounded-xl border border-green-100 shadow-sm flex flex-col justify-center">
+            <div className="flex justify-between items-center text-green-700 mb-2">
+              <span className="text-sm font-medium">Lucro em Juros</span>
               <TrendingUp className="w-4 h-4" />
             </div>
-            <span className="text-2xl font-bold text-blue-700">
-              {result ? formatCurrency(result.estimatedProfit) : 'R$ 0,00'}
-            </span>
+            <span className="text-3xl font-bold text-green-800">{result ? formatCurrency(result.estimatedProfit) : 'R$ 0,00'}</span>
           </div>
         </div>
 
-        {/* FORMULÁRIO INTERATIVO */}
-        <form onSubmit={handleCalculate} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-          <p className="text-sm text-slate-500 mb-4">Simule seus investimentos</p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Nome do Investimento */}
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Nome da Simulação</label>
-              <input 
-                type="text" 
-                value={investName}
-                onChange={(e) => setInvestName(e.target.value)}
-                placeholder="Ex: Reserva de Emergência" 
-                className="w-full border border-slate-300 rounded-md p-2 text-sm" 
-                required
-              />
+        {/* FORMULÁRIO */}
+        <div className="bg-white p-6 md:p-8 rounded-xl border border-slate-200 shadow-sm">
+          <h2 className="text-lg font-semibold mb-4 text-slate-800">Parâmetros da Simulação</h2>
+          <form onSubmit={handleCalculate} className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+            <div className="md:col-span-2 space-y-1">
+              <label className="text-xs font-medium text-slate-500">Nome do Objetivo</label>
+              <input type="text" value={investName} onChange={(e) => setInvestName(e.target.value)} className="w-full border border-slate-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-600" required />
             </div>
             <div className="space-y-1">
-              <label className="text-sm font-medium">Valor Inicial (R$)</label>
-              <input 
-                type="number" 
-                value={initialValue}
-                onChange={(e) => setInitialValue(Number(e.target.value))}
-                placeholder="1000" 
-                className="w-full border border-slate-300 rounded-md p-2 text-sm" 
-                required
-              />
+              <label className="text-xs font-medium text-slate-500">Valor Inicial (R$)</label>
+              <input type="number" value={initialValue} onChange={(e) => setInitialValue(Number(e.target.value))} className="w-full border border-slate-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-600" required />
             </div>
             <div className="space-y-1">
-              <label className="text-sm font-medium">Aporte Mensal (R$)</label>
-              <input 
-                type="number" 
-                value={monthlyContribution}
-                onChange={(e) => setMonthlyContribution(Number(e.target.value))}
-                placeholder="200" 
-                className="w-full border border-slate-300 rounded-md p-2 text-sm" 
-                required
-              />
+              <label className="text-xs font-medium text-slate-500">Aporte Mensal (R$)</label>
+              <input type="number" value={monthlyContribution} onChange={(e) => setMonthlyContribution(Number(e.target.value))} className="w-full border border-slate-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-600" required />
             </div>
-          </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-slate-500">Taxa Anual (%)</label>
+              <input type="number" step="0.01" value={annualRate} onChange={(e) => setAnnualRate(Number(e.target.value))} className="w-full border border-slate-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-600" required />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-slate-500">Prazo (Meses)</label>
+              <input type="number" value={termMonths} onChange={(e) => setTermMonths(Number(e.target.value))} className="w-full border border-slate-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-600" required />
+            </div>
+            
+            {/* Botão ocupar as colunas restantes se necessário, mas aqui vamos forçar em 1 coluna ou largura total no mobile */}
+            <button type="submit" disabled={isLoading} className="md:col-span-5 w-full bg-blue-600 text-white font-medium py-3 rounded-lg hover:bg-blue-700 transition shadow-md disabled:opacity-50 mt-2">
+              {isLoading ? 'Calculando a mágica...' : 'Executar Simulação'}
+            </button>
+          </form>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Taxa Anual (%)</label>
-              <input 
-                type="number" 
-                step="0.01"
-                value={annualRate}
-                onChange={(e) => setAnnualRate(Number(e.target.value))}
-                placeholder="12.5" 
-                className="w-full border border-slate-300 rounded-md p-2 text-sm" 
-                required
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Período (meses)</label>
-              <input 
-                type="number" 
-                value={termMonths}
-                onChange={(e) => setTermMonths(Number(e.target.value))}
-                placeholder="12" 
-                className="w-full border border-slate-300 rounded-md p-2 text-sm" 
-                required
-              />
-            </div>
-            <div className="space-y-1 flex items-end">
-               <button 
-                type="submit" 
-                disabled={isLoading}
-                className="w-full bg-blue-600 text-white hover:bg-blue-700 font-medium py-2 rounded-md transition disabled:opacity-50"
-              >
-                {isLoading ? 'Calculando...' : 'Calcular Retorno'}
-              </button>
-            </div>
-          </div>
-        </form>
+        {/* RENDERIZAÇÃO DOS GRÁFICOS */}
+        {result && (
+          <SimulationCharts 
+            history={result.projectionHistory} 
+            totalInvested={result.totalInvested}
+            totalProfit={result.estimatedProfit}
+          />
+        )}
 
       </div>
     </div>

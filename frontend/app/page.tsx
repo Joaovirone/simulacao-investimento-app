@@ -1,4 +1,3 @@
-// src/app/page.tsx
 "use client";
 
 import { useState } from 'react';
@@ -6,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { api } from '@/services/api';
 import { toast } from 'sonner';
 import { LineChart, Lock, Mail } from 'lucide-react';
+import Link from 'next/link';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -96,9 +96,13 @@ export default function Login() {
           </button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-slate-500">
-          Ainda não tem conta? <span className="text-blue-600 font-medium cursor-pointer hover:underline">Crie uma agora</span>
-        </div>
+          {/* Substitua a div antiga por esta: */}
+          <div className="mt-6 text-center text-sm text-slate-500">
+            Ainda não tem conta?{' '}
+            <Link href="/register" className="text-blue-600 font-medium hover:underline">
+              Crie uma agora
+            </Link>
+          </div>
       </div>
     </div>
   );

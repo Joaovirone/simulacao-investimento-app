@@ -1,6 +1,4 @@
-// src/services/CalculatorService.ts
 
-// 1. Criamos um "DTO" para tipar exatamente o que o serviço precisa receber
 export interface SimulationDTO {
   initialValue: number;
   monthlyContribution: number;
@@ -10,7 +8,6 @@ export interface SimulationDTO {
 
 export class CalculatorService {
   
-  // 2. Método utilitário privado para evitar repetição de código (DRY - Don't Repeat Yourself)
   private static round(value: number): number {
     return parseFloat(value.toFixed(2));
   }

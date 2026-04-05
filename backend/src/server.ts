@@ -11,8 +11,6 @@ app.use(express.json());
 
 const JWT_SECRET = process.env.JWT_SECRET || 'invest_simulator_123456';
 
-// --- INTERFACE CUSTOMIZADA PARA O TYPESCRIPT ---
-// Dizemos ao Express que a nossa Requisição pode conter um userId
 export interface AuthRequest extends Request {
   userId?: string;
 }
@@ -37,10 +35,6 @@ function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
   }
 }
 
-// ==========================================
-// ROTAS PÚBLICAS (Qualquer um acessa)
-// ==========================================
-
 // ROTA DE CADASTRO
 app.post('/register', async (req, res) => {
   try {
@@ -62,7 +56,7 @@ app.post('/register', async (req, res) => {
   }
 });
 
-// ROTA DE LOGIN
+
 app.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -86,9 +80,6 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// ==========================================
-// ROTAS PRIVADAS (Requerem o Middleware)
-// ==========================================
 
 // GET: Busca apenas as simulações DO USUÁRIO LOGADO
 app.get('/simulations', authMiddleware, async (req: AuthRequest, res: Response) => {
@@ -152,5 +143,5 @@ app.delete('/simulations/:id', authMiddleware, async (req: AuthRequest, res: Res
 
 const PORT = process.env.PORT || 3333;
 app.listen(PORT, () => {
-    console.log(`🔥 Servidor Seguro rodando na porta http://localhost:${PORT}`);
+    console.log(`Servidor Seguro rodando na porta http://localhost:${PORT}`);
 });
