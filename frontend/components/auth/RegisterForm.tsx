@@ -55,6 +55,7 @@ export function RegisterForm({
             placeholder="Mínimo 6 caracteres"
             icon={Lock}
             onChange={onPasswordChange}
+            minLength={6}
           />
 
           <button
@@ -72,7 +73,7 @@ export function RegisterForm({
           <div className="space-y-2">
             {perks.map((perk) => (
               <div key={perk} className="flex items-center gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" style={{color: '#34d399'}} />
+                <CheckCircle2 className="w-3.5 h-3.5 shrink-0" style={{color: '#34d399'}} />
                 <span className="text-xs" style={{color: 'var(--text-secondary)'}}>{perk}</span>
               </div>
             ))}

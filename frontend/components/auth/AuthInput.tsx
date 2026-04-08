@@ -8,6 +8,7 @@ interface AuthInputProps {
   icon: LucideIcon;
   onChange: (value: string) => void;
   step?: string;
+  minLength?: number;
 }
 
 export function AuthInput({
@@ -18,6 +19,7 @@ export function AuthInput({
   icon: Icon,
   onChange,
   step,
+  minLength,
 }: AuthInputProps) {
   return (
     <div className="space-y-2">
@@ -30,6 +32,7 @@ export function AuthInput({
           type={type}
           value={value}
           step={step}
+          minLength={minLength}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           className="dark-input w-full rounded-xl py-3 pl-10 pr-4 text-sm"

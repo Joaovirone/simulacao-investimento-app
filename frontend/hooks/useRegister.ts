@@ -20,6 +20,14 @@ export function useRegister() {
 
   const handleRegister = async (e: FormEvent) => {
     e.preventDefault();
+
+    if (password.length < 6) {
+      toast.error('Senha muito curta', {
+        description: 'A senha deve ter no mínimo 6 caracteres.',
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {

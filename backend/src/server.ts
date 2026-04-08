@@ -40,6 +40,14 @@ app.post('/register', async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: 'Nome, email e senha são obrigatórios.' });
+    }
+
+    if (typeof password !== 'string' || password.length < 6) {
+      return res.status(400).json({ error: 'A senha deve ter no mínimo 6 caracteres.' });
+    }
+
     const userExists = await prisma.user.findUnique({ where: { email } });
     if (userExists) return res.status(400).json({ error: 'Email já cadastrado.' });
 
