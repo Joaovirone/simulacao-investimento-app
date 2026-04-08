@@ -1,14 +1,24 @@
-// frontend/src/app/layout.tsx
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
-import { Toaster } from 'sonner'; // <-- 1. Adicione esta importação
+import { Toaster } from 'sonner';
+import { DM_Sans, Syne } from "next/font/google";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
-const inter = Inter({ subsets: ["latin"] });
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600"],
+  variable: "--font-dm-sans",
+});
+
+const syne = Syne({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-syne",
+});
 
 export const metadata: Metadata = {
-  title: "InvestSim",
-  description: "Simulador de Investimentos",
+  title: "InvestSim — Simulador de Investimentos",
+  description: "Simule seus investimentos com inteligência. Visualize o crescimento do seu patrimônio com juros compostos.",
 };
 
 export default function RootLayout({
@@ -18,10 +28,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <body className={inter.className}>
+      <body className={`${dmSans.variable} ${syne.variable}`}>
+        <ThemeToggle />
         {children}
-        {/* 2. Adicione o Toaster aqui para ele aparecer em todo o site */}
-        <Toaster richColors position="top-right" /> 
+        <Toaster
+          theme="dark"
+          richColors
+          position="top-right"
+          toastOptions={{
+            style: {
+              background: '#1e293b',
+              border: '1px solid rgba(255,255,255,0.1)',
+              color: '#f1f5f9',
+              fontFamily: 'var(--font-dm-sans), sans-serif',
+            },
+          }}
+        />
       </body>
     </html>
   );
